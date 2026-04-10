@@ -1,38 +1,103 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudSave | Online Downloader</title>
+    <title>CloudSave | Mobile Video Downloader</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading-pulse { animation: pulse-soft 2s infinite; }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-md bg-slate-800 p-8 rounded-3xl shadow-2xl border border-slate-700">
-        <h1 class="text-2xl font-bold text-center mb-6 text-blue-400">CloudSave</h1>
-        <input id="urlInput" type="text" placeholder="Paste link here..." 
-            class="w-full p-4 rounded-xl bg-slate-900 border border-slate-700 mb-4 outline-none focus:border-blue-500 transition-all text-white">
-        <button onclick="downloadVideo()" id="btn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20">
-            Download to Local Storage
-        </button>
-        <p id="status" class="mt-4 text-center text-xs text-slate-500 hidden italic">Connecting to cloud engine...</p>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md">
+        <div class="flex items-center justify-between mb-6 px-2">
+            <div class="flex items-center gap-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Server Live</span>
+            </div>
+            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">v2.0 Stable</span>
+        </div>
+
+        <div class="glass rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2">CloudSave</h1>
+                <p class="text-slate-400 text-sm">Paste a video link to download locally</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="relative">
+                    <input id="urlInput" type="text" 
+                        class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+                        placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+
+                <button onclick="downloadVideo()" id="btn" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Download to Device</span>
+                </button>
+            </div>
+
+            <div id="statusArea" class="mt-8 hidden">
+                <div class="flex flex-col items-center gap-3">
+                    <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full w-1/3 animate-[shimmer_2s_infinite] transition-all" style="width: 60%"></div>
+                    </div>
+                    <p class="text-xs text-blue-400 font-medium loading-pulse">Cloud Engine Processing...</p>
+                    <p class="text-[10px] text-slate-500 text-center">Initial request may take 50s on first use.</p>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-center mt-6 text-slate-600 text-[10px] px-6">
+            Files are streamed directly from the cloud to your local storage. We do not store any content on our servers.
+        </p>
     </div>
+
     <script>
-        const BACKEND_URL = "https://your-app-name.onrender.com";
+        // THIS IS YOUR LIVE BACKEND URL
+        const BACKEND_URL = "https://my-video-downloader-3vxh.onrender.com";
+
         function downloadVideo() {
             const url = document.getElementById('urlInput').value.trim();
-            const status = document.getElementById('status');
+            const statusArea = document.getElementById('statusArea');
             const btn = document.getElementById('btn');
-            if (!url) return alert("Please paste a URL");
-            status.classList.remove('hidden');
+
+            if (!url) {
+                alert("Please paste a valid video link first!");
+                return;
+            }
+
+            // UI Feedback
+            statusArea.classList.remove('hidden');
             btn.disabled = true;
-            btn.style.opacity = "0.5";
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.querySelector('span').innerText = "Processing...";
+
+            // Redirect to the download stream
+            // The browser will automatically handle the file saving
             window.location.href = `${BACKEND_URL}/api/download?url=${encodeURIComponent(url)}`;
+
+            // Keep the status visible for a while to guide the user
             setTimeout(() => {
-                status.classList.add('hidden');
                 btn.disabled = false;
-                btn.style.opacity = "1";
-            }, 10000);
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.querySelector('span').innerText = "Download to Device";
+                statusArea.classList.add('hidden');
+            }, 15000);
         }
     </script>
 </body>
 </html>
+
+
+```
