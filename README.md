@@ -1,25 +1,16 @@
 # P2P File Cloud
 
-A Seedr-style web application for accepting user-supplied HTTP/HTTPS download URLs and BitTorrent magnet links, queuing transfers on a server, storing completed files, and exposing them through authenticated HTTPS download URLs.
+Seedr-style web application for authorized HTTP/HTTPS URL downloads and magnet-link queueing.
 
-## Scope
+## Run
 
-- HTTP/HTTPS URL ingestion
-- Magnet URI ingestion
-- Transfer queue with progress/state
-- Local object/file storage
-- Downloadable HTTPS links
-- Responsive dark dashboard
-- Provider abstraction so a torrent engine can be swapped in
-
-## Safety and deployment
-
-Only download content the operator and users are authorized to access. The production backend should enforce authentication, storage quotas, rate limits, SSRF protections, and abuse controls. Never allow arbitrary server-side URL fetching without validating destination hosts and blocking private/link-local address ranges.
-
-## Architecture
-
-```
-Browser -> API -> Job Queue -> HTTP Downloader / Torrent Provider -> Storage -> HTTPS File API
+```bash
+npm install
+npm start
 ```
 
-The repository currently provides the frontend and backend scaffold. For production torrenting, connect the provider interface in `server/providers` to a licensed/appropriate BitTorrent engine and persistent job queue.
+Open `http://localhost:3000`.
+
+## Notes
+
+HTTP/HTTPS transfers are implemented with SSRF protections. Magnet links are accepted by the UI/API and represented as queued jobs; connect a real BitTorrent engine through `server/providers` for persistent P2P transfers. Only download content you are authorized to access.
