@@ -1,14 +1,15 @@
-
 {
-  "name": "cloud-downloader-backend",
+  "name": "p2p-file-cloud",
   "version": "1.0.0",
-  "main": "server.js",
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "ytdl-core": "latest"
-  },
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.0"
   }
 }
