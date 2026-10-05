@@ -2,8 +2,11 @@ const state={items:[],files:[]};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-async function api(p,o){const r=await fetch('/api'+p,{headers:{'Content-Type':'application/json'},...o});const j=await r.json();if(!r.ok)throw Error(j.error||'Request failed');return j}
-function humanRate(n){if(!n)return'0 B';const u=['B','KB','MB','GB'];let i=0,x=n;while(x>=1024&&i<3){x/=1024;i++}return(x<10?x.toFixed(1):Math.round(x))+' '+u[i]}
+async function api(p,o){const r=await fetch('/api'+p,{headers:{'Content-Type':'application/json',...(o?.headers||{})},...o});const j=await r.json();if(!r.ok)throw Error(j.error||'Request failed');return j}
+function humanRate(n){if(!n)return'0 B';const u=['B','KB','MB','GB'];let i=0,x=Number(n)||0;while(x>=1024&&i<3){x/=1024;i++}return(x<10?x.toFixed(1):Math.round(x))+' '+u[i]}
+function humanBytes(n){if(!n)return'0 B';const u=['B','KB','MB','GB','TB'];let i=0,x=Number(n)||0;while(x>=1024&&i<u.length-1){x/=1024;i++}return(x<10?x.toFixed(1):Math.round(x))+' '+u[i]}
+function eta(x){const speed=Number(x.downloadSpeed)||0,total=Number(x.total)||0,done=Number(x.bytes)||0;if(!speed||!total||done>=total)return'—';const sec=Math.max(0,(total-done)/speed);if(sec<60)return Math.round(sec)+'s';if(sec<3600)return Math.floor(sec/60)+'m '+Math.round(sec%60)+'s';return Math.floor(sec/3600)+'h '+Math.round((sec%3600)/60)+'m'}
+function connectionState(x){if(x.status==='completed')return['COMPLETED','good'];if(x.status==='failed')return['FAILED','bad'];if(x.status==='paused')return['PAUSED','pause'];if(x.status==='queued')return['QUEUED','wait'];if(x.type==='magnet'){const peers=Number(x.peers)||0,speed=Number(x.downloadSpeed)||0;if(peers>0&&speed>0)return['P2P DOWNLOADING','good'];if(peers>0)return['CONNECTED · WAITING FOR DATA','wait'];return['SEARCHING FOR PEERS','wait']}return['DOWNLOADING','good']}
 function actions(x){
   if(x.type!=='magnet'||['completed','failed','removed'].includes(x.status))return '';
   const pause=x.status==='paused';
@@ -17,9 +20,15 @@ function render(){
   $('#lastUpdated').textContent='Updated '+new Date().toLocaleTimeString();
   $('#transferList').innerHTML=i.length?i.map(x=>{
     const p=Math.round((x.progress||0)*100);
-    const speed=x.downloadSpeed?' · '+humanRate(x.downloadSpeed)+'/s':'';
-    const peers=x.peers!=null?' · '+x.peers+' peers':'';
-    return '<article class="transfer"><div class="row"><div style="min-width:0"><div class="name">'+esc(x.name||x.source)+'</div><div class="meta">'+esc(x.type)+' · '+esc(x.status)+' · '+p+'%'+speed+peers+'</div></div><div class="transfer-actions">'+actions(x)+'</div></div><div class="progress"><i style="width:'+p+'%"></i></div></article>';
+    const [label,cls]=connectionState(x);
+    const speed=humanRate(x.downloadSpeed);
+    const peers=Number(x.peers)||0;
+    const total=Number(x.total)||0;
+    const done=Number(x.bytes)||0;
+    const details=x.type==='magnet'
+      ? '<div class="transfer-metrics"><span>Peers <b>'+peers+'</b></span><span>Speed <b>'+esc(speed)+'/s</b></span><span>Downloaded <b>'+esc(humanBytes(done))+(total?' / '+esc(humanBytes(total)):'')+'</b></span><span>ETA <b>'+esc(eta(x))+'</b></span></div>'
+      : '';
+    return '<article class="transfer '+esc(cls)+'"><div class="row"><div style="min-width:0;flex:1"><div class="name">'+esc(x.name||x.source)+'</div><div class="meta"><span class="status-dot '+esc(cls)+'"></span>'+esc(label)+' · '+p+'%</div>'+details+'</div><div class="transfer-actions">'+actions(x)+'</div></div><div class="progress"><i style="width:'+p+'%"></i></div></article>';
   }).join(''):'<div class="transfer"><span class="muted">No transfers yet.</span></div>';
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=jobAction);
 }
